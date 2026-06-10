@@ -1,4 +1,4 @@
-# MelodyLab v5.89 Phase Badge No Overlap
+# MelodyLab v5.90 Longitudinal Real Particle Motion
 
 ปรับหน้า Displacement and Pressure ให้กราฟกินพื้นที่แนวตั้งเต็มขึ้นบนจอมือถือ
 - เพิ่มความสูง canvas สำหรับหน้า Displacement and Pressure / Longitudinal
@@ -6,7 +6,15 @@
 - ลดช่องว่างใต้กราฟล่าง
 - คงพฤติกรรมความถี่, แอมพลิจูด, อัตราเร็วคลื่น, เฟส และความต่างเฟส
 
-## v5.89 Phase Badge No Overlap
+## v5.90 Longitudinal Real Particle Motion
 - เลื่อน badge “Phase Difference: Δφ = ...°” ลงมาอยู่ในกรอบกราฟการกระจัด
 - แก้ไม่ให้ข้อความ Phase Difference ซ้อนทับกับลูกศรทิศทางการเคลื่อนที่ของคลื่น
 - คงการขยายกราฟแนวตั้งและการปรับความถี่ f จาก v5.88
+
+## v5.90 Longitudinal Real Particle Motion
+- ปรับกราฟ Longitudinal Wave ให้อนุภาคสั่นซ้าย–ขวารอบตำแหน่งสมดุล
+- เพิ่มจุดสมดุลสีจางและจุดจริงของอนุภาค เพื่อให้เห็นว่าอนุภาคไม่ได้ไหลไปกับคลื่น
+- แสดงส่วนอัด–ส่วนขยายจากความหนาแน่นของอนุภาค
+- เพิ่มลูกศร “การสั่นของอนุภาค” ที่จุดสังเกต
+- แก้ให้ f และ v ส่งผลต่อความยาวคลื่นของหน้า Longitudinal Wave ผ่าน λ = v/f
+- คงหน้า Displacement and Pressure จาก v5.89

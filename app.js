@@ -508,166 +508,238 @@ function drawLongitudinalFinal(ctx, c, p, w, h){
   ctx.fillStyle=bg;
   ctx.fillRect(0,0,w,h);
 
-  // Subtle grid
   ctx.strokeStyle="rgba(148,163,184,.10)";
   ctx.lineWidth=1;
-  for(let x=0;x<w;x+=78){
-    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
-  }
-  for(let y=0;y<h;y+=52){
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
-  }
+  for(let x=0;x<w;x+=78){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+  for(let y=0;y<h;y+=52){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
 
-  const eqX = w * 0.555;
-  const xMin = Math.max(158, w * 0.155);
-  const xMax = w - 72;
+  const xMin = Math.max(118, w * 0.12);
+  const xMax = w - 62;
+  const titleY = 32;
+  const arrowY = 68;
+  const topY = 96;
+  const bottomMargin = 34;
+  const graphBottom = h - bottomMargin;
+  const fieldTop = topY;
+  const fieldH = Math.max(190, Math.min(h * 0.54, graphBottom - fieldTop - 92));
+  const airTop = fieldTop + 44;
+  const airBottom = airTop + fieldH;
+  const graphY = Math.min(graphBottom - 38, airBottom + 56);
+  const rows = 7;
+  const cols = Math.max(20, Math.floor((xMax-xMin) / 34));
+  const rowGap = fieldH / Math.max(1, rows - 1);
+  const colGap = (xMax-xMin) / Math.max(1, cols - 1);
+  const baseRadius = Math.max(4.6, Math.min(7.8, colGap * 0.16));
+  const ampPx = Math.max(12, Math.min(34, colGap * 0.48)) * p.A;
 
-  // v5.67: vertical-fill layout kept, but with fewer rows and larger particles.
-  // This makes each particle more visible while preserving the same graph size.
-  const rows = 15;
-  const graphTop = 58;                  // close to graph title area
-  const axisY = h - 44;                 // close to bottom/player bar
-  const y0 = Math.max(104, graphTop + 72);
-  const availableHeight = Math.max(220, axisY - y0 - 12);
-  const rowGap = availableHeight / (rows - 1);
-  const particleRadius = Math.max(10.5, Math.min(14.2, rowGap * 0.62));
-  const bandHeight = (rows - 1) * rowGap;
-  const yCenter = y0 + bandHeight * 0.5;
-
-  const speakerX = Math.max(66, xMin - 94);
-  const speakerY = yCenter;
-  const currentAmpPx = 16.5 * p.A;
-  const baseGap = Math.max(39, Math.min(48, w * 0.038));
-  const k = 2 * Math.PI / 270;
+  // v5.90: frequency and wave speed set the visual wavelength through λ = v/f.
+  const referenceLambda = 343 / 440;
+  const wavelengthPx = Math.max(150, Math.min(620, (p.lambda / referenceLambda) * 300));
+  const k = 2 * Math.PI / wavelengthPx;
   const phase = vizState.t * 0.105 * p.speed;
-  const obsRow = Math.floor(rows/2);
-  const obsBaseX = eqX;
-  let obsX = obsBaseX;
-  let obsY = y0 + obsRow * rowGap;
+  const displacementAt = (x)=> ampPx * Math.sin(k*(x-xMin) - phase);
 
-  // Speaker source on the left
-  drawSpeaker(ctx, speakerX, speakerY, 1.16);
-
-  // Compression/rarefaction glow bands fill the particle column height.
-  const bandCenters=[
-    xMin+48,
-    xMin+218,
-    xMin+410,
-    xMin+600,
-    xMin+790
-  ];
-  bandCenters.forEach((bx,i)=>{
-    const g=ctx.createLinearGradient(bx-62,0,bx+62,0);
-    const col=i%2===0?"rgba(34,211,238,.16)":"rgba(168,85,247,.15)";
-    g.addColorStop(0,"rgba(0,0,0,0)");
-    g.addColorStop(.5,col);
-    g.addColorStop(1,"rgba(0,0,0,0)");
-    ctx.fillStyle=g;
-    ctx.fillRect(bx-68,Math.max(44,y0-24),136,bandHeight+52);
-  });
-
-  // Small canvas title
-  ctx.fillStyle="#cfe9ff";
+  ctx.fillStyle="#d8efff";
   ctx.font="20px Sarabun, system-ui, sans-serif";
   ctx.textAlign="left";
-  ctx.fillText("Longitudinal Wave (คลื่นตามยาว)", 24, 34);
+  ctx.fillText("Longitudinal Wave (คลื่นตามยาว)", 24, titleY);
 
-  // Direction arrow: immediately above equilibrium label and particle field.
-  const arrowY = y0 - 56;
   ctx.save();
   ctx.strokeStyle="rgba(34,211,238,.96)";
   ctx.fillStyle="rgba(34,211,238,.96)";
   ctx.lineWidth=4;
   ctx.beginPath();
-  ctx.moveTo(w*0.32,arrowY);
-  ctx.lineTo(w*0.82,arrowY);
+  ctx.moveTo(w*0.31, arrowY);
+  ctx.lineTo(w*0.82, arrowY);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(w*0.82,arrowY);
-  ctx.lineTo(w*0.795,arrowY-14);
-  ctx.lineTo(w*0.795,arrowY+14);
+  ctx.moveTo(w*0.82, arrowY);
+  ctx.lineTo(w*0.795, arrowY-14);
+  ctx.lineTo(w*0.795, arrowY+14);
   ctx.closePath();
   ctx.fill();
-  ctx.font="bold 18px Sarabun, system-ui, sans-serif";
+  ctx.font="bold 16px Sarabun, system-ui, sans-serif";
   ctx.textAlign="center";
-  ctx.fillText("ทิศทางการเคลื่อนที่ของคลื่น", w*0.57, arrowY-16);
+  ctx.fillText("ทิศทางการเคลื่อนที่ของคลื่น", w*0.56, arrowY-16);
   ctx.restore();
 
-  // Equilibrium marker, placed close to particle top.
-  const eqLabelY = y0 - 22;
   ctx.save();
-  ctx.strokeStyle="rgba(255,255,255,.80)";
-  ctx.setLineDash([8,8]);
-  ctx.lineWidth=2;
-  ctx.beginPath();
-  ctx.moveTo(eqX, eqLabelY + 9);
-  ctx.lineTo(eqX, axisY + 2);
+  const panelGrad = ctx.createLinearGradient(xMin-36, fieldTop, xMax+36, airBottom+28);
+  panelGrad.addColorStop(0,"rgba(4,18,42,.76)");
+  panelGrad.addColorStop(1,"rgba(2,8,24,.36)");
+  ctx.fillStyle=panelGrad;
+  ctx.strokeStyle="rgba(88,166,255,.25)";
+  ctx.lineWidth=1.4;
+  roundRect(ctx, xMin-42, fieldTop, xMax-xMin+84, airBottom-fieldTop+34, 18);
+  ctx.fill();
   ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle="rgba(255,255,255,.96)";
-  ctx.textAlign="center";
-  ctx.font="16px Sarabun, system-ui, sans-serif";
-  ctx.fillText("ตำแหน่งสมดุล", eqX, eqLabelY);
   ctx.restore();
 
-  // x-axis directly under particle field.
-  ctx.save();
-  ctx.strokeStyle="rgba(255,245,220,.94)";
-  ctx.fillStyle="rgba(255,255,255,.94)";
-  ctx.lineWidth=2;
-  ctx.beginPath();
-  ctx.moveTo(xMin-34, axisY);
-  ctx.lineTo(w-46, axisY);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(w-46, axisY);
-  ctx.lineTo(w-61, axisY-9);
-  ctx.moveTo(w-46, axisY);
-  ctx.lineTo(w-61, axisY+9);
-  ctx.stroke();
-  const tickCount = 18;
-  for(let i=0;i<tickCount;i++){
-    const tx=(xMin-30)+i*((w-xMin-48)/(tickCount-1));
-    ctx.beginPath();
-    ctx.moveTo(tx,axisY-11);
-    ctx.lineTo(tx,axisY+11);
-    ctx.stroke();
-  }
-  ctx.font="24px Sarabun, system-ui, sans-serif";
-  ctx.fillText("x", w-36, axisY+31);
-  ctx.restore();
-
-  // Particle grid: longitudinal displacement only along x.
-  const baseXs=[];
-  for(let x=xMin;x<=xMax;x+=baseGap) baseXs.push(x);
-  if(!baseXs.some(v => Math.abs(v - eqX) < 0.5)) baseXs.push(eqX);
-  baseXs.sort((a,b)=>a-b);
-
-  for(let row=0; row<rows; row++){
-    const y = y0 + row*rowGap;
-    for(let i=0;i<baseXs.length;i++){
-      const base=baseXs[i];
-      const disp=currentAmpPx*Math.sin(k*(base-eqX)-phase);
-      const x=base+disp;
-      const isObs = row===obsRow && Math.abs(base-obsBaseX) < 0.5;
-      if(isObs){
-        obsX=x;
-        obsY=y;
-        continue;
-      }
-      drawParticleShadow(ctx,x,y,particleRadius);
-      drawParticleSphere(ctx,x,y,particleRadius,"cyan");
+  const yBandTop = airTop - 28;
+  const yBandH = (rows-1)*rowGap + 56;
+  for(let x=xMin; x<xMax; x+=12){
+    const density = -Math.cos(k*(x-xMin)-phase);
+    if(density > 0.50 || density < -0.50){
+      const alpha = Math.min(0.22, 0.08 + Math.abs(density) * 0.12);
+      const color = density > 0 ? `rgba(34,211,238,${alpha})` : `rgba(168,85,247,${alpha})`;
+      const g = ctx.createLinearGradient(x-28,0,x+28,0);
+      g.addColorStop(0,"rgba(0,0,0,0)");
+      g.addColorStop(.5,color);
+      g.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=g;
+      ctx.fillRect(x-28,yBandTop,56,yBandH);
     }
   }
 
+  function wrapToRange(x){
+    while(x < xMin + 60) x += wavelengthPx;
+    while(x > xMax - 60) x -= wavelengthPx;
+    return x;
+  }
+  const compX = wrapToRange(xMin + ((((phase + Math.PI) / k) % wavelengthPx) + wavelengthPx) % wavelengthPx);
+  const rareX = wrapToRange(xMin + (((phase / k) % wavelengthPx) + wavelengthPx) % wavelengthPx);
+
+  function drawSmallPill(cx, cy, text, stroke, fill){
+    ctx.save();
+    ctx.font="bold 13px Sarabun, system-ui, sans-serif";
+    ctx.textAlign="center";
+    const tw = ctx.measureText(text).width;
+    const bw = tw + 26;
+    ctx.fillStyle=fill;
+    ctx.strokeStyle=stroke;
+    ctx.lineWidth=1.4;
+    roundRect(ctx, cx-bw/2, cy-15, bw, 30, 12);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle="rgba(245,248,255,.96)";
+    ctx.fillText(text, cx, cy+5);
+    ctx.restore();
+  }
+  drawSmallPill(compX, fieldTop + 18, "ส่วนอัด", "rgba(34,211,238,.55)", "rgba(8,30,62,.80)");
+  drawSmallPill(rareX, airBottom + 18, "ส่วนขยาย", "rgba(168,85,247,.55)", "rgba(23,16,55,.78)");
+
+  const speakerX = Math.max(48, xMin - 88);
+  const speakerY = airTop + (rows-1)*rowGap/2;
+  drawSpeaker(ctx, speakerX, speakerY, 1.05);
+
+  const obsCol = Math.floor(cols * 0.54);
+  const obsRow = Math.floor(rows/2);
+  let obsBaseX = xMin + obsCol * colGap;
+  let obsActualX = obsBaseX + displacementAt(obsBaseX);
+  let obsY = airTop + obsRow * rowGap;
+
   ctx.save();
-  const obsRadius = particleRadius + 1.9;
-  drawParticleShadow(ctx,obsX,obsY,obsRadius);
-  drawParticleSphere(ctx,obsX,obsY,obsRadius,"red");
+  for(let r=0; r<rows; r++){
+    const y = airTop + r * rowGap;
+    for(let i=0; i<cols; i++){
+      const baseX = xMin + i * colGap;
+      const offset = displacementAt(baseX);
+      const x = baseX + offset;
+      const density = Math.max(0, Math.min(1, (1 - Math.cos(k*(baseX-xMin)-phase)) / 2));
+      const radius = baseRadius * (0.92 + density * 0.32);
+
+      ctx.beginPath();
+      ctx.fillStyle="rgba(148,163,184,.22)";
+      ctx.arc(baseX, y, Math.max(2.0, baseRadius*0.34), 0, Math.PI*2);
+      ctx.fill();
+
+      if(i % 3 === 0 && r === obsRow){
+        ctx.strokeStyle="rgba(148,163,184,.20)";
+        ctx.lineWidth=1;
+        ctx.beginPath();
+        ctx.moveTo(baseX, y);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+
+      const grad=ctx.createRadialGradient(x-2,y-2,1,x,y,radius*2.8);
+      grad.addColorStop(0,"rgba(255,255,255,.98)");
+      grad.addColorStop(.40,"rgba(125,230,255,.92)");
+      grad.addColorStop(1,"rgba(34,211,238,.18)");
+      ctx.fillStyle=grad;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle="rgba(255,77,109,.72)";
+  ctx.setLineDash([8,8]);
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(obsBaseX, fieldTop+4);
+  ctx.lineTo(obsBaseX, graphY+10);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  drawTrackedParticle(ctx, obsActualX, obsY, "");
+
+  ctx.save();
+  ctx.strokeStyle="rgba(255,224,102,.95)";
+  ctx.fillStyle="rgba(255,224,102,.95)";
+  ctx.lineWidth=2.2;
+  const arrY = obsY + Math.min(36, rowGap*0.52);
+  ctx.beginPath();
+  ctx.moveTo(obsBaseX-ampPx, arrY);
+  ctx.lineTo(obsBaseX+ampPx, arrY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(obsBaseX-ampPx, arrY);
+  ctx.lineTo(obsBaseX-ampPx+9, arrY-5);
+  ctx.moveTo(obsBaseX-ampPx, arrY);
+  ctx.lineTo(obsBaseX-ampPx+9, arrY+5);
+  ctx.moveTo(obsBaseX+ampPx, arrY);
+  ctx.lineTo(obsBaseX+ampPx-9, arrY-5);
+  ctx.moveTo(obsBaseX+ampPx, arrY);
+  ctx.lineTo(obsBaseX+ampPx-9, arrY+5);
+  ctx.stroke();
+  ctx.font="12px Sarabun, system-ui, sans-serif";
+  ctx.textAlign="center";
+  ctx.fillText("การสั่นของอนุภาค", obsBaseX, arrY+18);
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle="rgba(255,255,255,.25)";
+  ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(xMin, graphY); ctx.lineTo(xMax, graphY); ctx.stroke();
+  ctx.fillStyle="rgba(207,233,255,.78)";
+  ctx.font="13px Sarabun, system-ui, sans-serif";
+  ctx.textAlign="center";
+  ctx.fillText("ตำแหน่ง x", (xMin+xMax)/2, graphY+28);
+  ctx.save();
+  ctx.translate(xMin-54, graphY);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText("การกระจัด s", 0, 0);
+  ctx.restore();
+
+  const graphAmp = Math.min(42, Math.max(24, h * 0.075)) * p.A;
+  const pts=[];
+  for(let x=xMin; x<=xMax; x++){
+    const y = graphY - graphAmp * Math.sin(k*(x-xMin)-phase);
+    pts.push([x,y]);
+  }
+  drawWaveLine(ctx, pts, "#22d3ee", 3.2);
+  const obsGraphY = graphY - graphAmp * Math.sin(k*(obsBaseX-xMin)-phase);
+  drawTrackedParticle(ctx, obsBaseX, obsGraphY, "");
+  ctx.restore();
+
+  ctx.save();
+  ctx.font="12px Sarabun, system-ui, sans-serif";
+  ctx.textAlign="left";
+  const lx = xMin;
+  const ly = h - 12;
+  ctx.fillStyle="rgba(148,163,184,.92)";
+  ctx.beginPath(); ctx.arc(lx, ly-5, 3, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle="rgba(210,225,240,.88)";
+  ctx.fillText("ตำแหน่งสมดุล", lx+10, ly);
+  ctx.fillStyle="rgba(125,230,255,.92)";
+  ctx.beginPath(); ctx.arc(lx+122, ly-5, 5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle="rgba(210,225,240,.88)";
+  ctx.fillText("ตำแหน่งจริงของอนุภาค", lx+134, ly);
   ctx.restore();
 }
-
-
 
 function drawDisplacementPressureFinal(ctx, c, p, w, h){
   ctx.clearRect(0,0,w,h);
