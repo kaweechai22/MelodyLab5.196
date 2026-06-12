@@ -69,16 +69,25 @@ function drawRebuiltTopic(ctx,c,p,w,h,mode){
 
   if(mode==="soundReflection"){
     const angle=vNum("vizAngle",25);
-    const freq=vNum("vizFreq",1000);
+    const freq=1000; // reflection does not change frequency; keep fixed for teaching clarity
     const amp=vNum("vizAmp",0.80);
+    const distance=vNum("vizDistance",10);
+    const echoTime=2*distance/343;
+    const echoOccurs=echoTime>=0.10;
     const wallType=vSel("vizWallType","rigid");
     const reflRatio = wallType==="rigid" ? 0.95 : 0.45;
     const reflAlpha = wallType==="rigid" ? 1.00 : 0.45;
-    const reflWidth = wallType==="rigid" ? 3.4 : 2.0;
+    const incidentAlpha = lim(0.35 + amp*0.48, 0.35, 1.0);
+    const incidentWidth = 1.8 + amp*2.6;
+    const incidentWaveWidth = 0.9 + amp*2.1;
+    const reflWidth = (wallType==="rigid" ? 1.6 : 0.9) + amp*2.4*reflRatio;
+    const reflectedEnergy = Math.round(reflRatio * amp * amp * 100);
     vText("vizAngleLabel",angle.toFixed(0)+"°");
-    vText("vizFreqLabel",freq>=1000?(freq/1000).toFixed(2).replace(/\.00$/,'')+" kHz":freq.toFixed(0)+" Hz");
+    vText("vizFreqLabel","f คงที่");
     vText("vizAmpLabel",amp.toFixed(2));
+    vText("vizDistanceLabel",distance.toFixed(1)+" m");
     vText("vizWallTypeLabel",wallType==="rigid"?"Rigid":"Soft");
+    vText("vizEchoAudioLabel",echoOccurs?"✅ เกิด Echo":"⚠️ ไม่เกิด Echo");
     panel=corePanel(ctx,w,h,"Sound Reflection (การสะท้อนของเสียง)");
 
     // Geometry: vertical wall => normal is horizontal through point of incidence.
@@ -104,8 +113,8 @@ function drawRebuiltTopic(ctx,c,p,w,h,mode){
     outX = wallX - Math.abs((outY-hitY)/Math.tan(thetaUsed||0.0001));
     outX = Math.max(outX, panel.x+150);
 
-    const rayColor="rgba(255,92,171,0.98)";
-    const reflColor = wallType==="rigid" ? `rgba(124,255,124,${reflAlpha})` : `rgba(124,255,124,${reflAlpha})`;
+    const rayColor=`rgba(255,92,171,${incidentAlpha})`;
+    const reflColor = `rgba(124,255,124,${reflAlpha * lim(0.45+amp*0.55,0.35,1)})`;
 
     // Speaker + expanding sound wavefronts.
     drawSpeaker(ctx,srcX,srcY,0.95);
@@ -113,9 +122,9 @@ function drawRebuiltTopic(ctx,c,p,w,h,mode){
     ctx.save();
     for(let i=0;i<14;i++){
       const r=34+i*26+waveShift;
-      const alpha=lim(0.50-i*0.028,0.06,0.52)*amp;
+      const alpha=lim((0.28 + amp*0.50)-i*0.032,0.04,0.78);
       ctx.strokeStyle=`rgba(0,170,255,${alpha})`;
-      ctx.lineWidth=2.1;
+      ctx.lineWidth=incidentWaveWidth;
       ctx.beginPath();
       ctx.arc(srcX+6,srcY,r,-0.92,0.92);
       ctx.stroke();
@@ -163,7 +172,7 @@ function drawRebuiltTopic(ctx,c,p,w,h,mode){
     ctx.restore();
 
     // Incident and reflected rays.
-    coreArrow(ctx,inX,inY,wallX,hitY,rayColor,3.4);
+    coreArrow(ctx,inX,inY,wallX,hitY,rayColor,incidentWidth);
     coreArrow(ctx,wallX,hitY,outX,outY,reflColor,reflWidth);
 
     // Reflected wavefronts: they must originate at the wall and move outward into the air.
@@ -174,9 +183,9 @@ function drawRebuiltTopic(ctx,c,p,w,h,mode){
     const reflectedShift = (time*34)%30;
     for(let i=0;i<10;i++){
       const rr = 28 + i*26 + reflectedShift;
-      const alpha = lim((0.38 - i*0.027)*reflRatio*amp, 0.025, 0.42);
+      const alpha = lim((0.20 + amp*0.45 - i*0.032)*reflRatio, 0.018, 0.62);
       ctx.strokeStyle = `rgba(124,255,124,${alpha})`;
-      ctx.lineWidth = wallType==="rigid" ? 2.0 : 1.15;
+      ctx.lineWidth = Math.max(0.8, reflWidth*0.55);
       ctx.beginPath();
       ctx.arc(wallX, hitY, rr, reflectedDir-reflectedSpread, reflectedDir+reflectedSpread);
       ctx.stroke();
@@ -195,11 +204,60 @@ function drawRebuiltTopic(ctx,c,p,w,h,mode){
     ctx.fillText("(คลื่นสะท้อนออกจากผนัง)", echoLabelX, echoLabelY+18);
     ctx.restore();
 
+    // Distance and echo-time status badge.
+    ctx.save();
+    const dY = panel.y + panel.h - 35;
+    ctx.strokeStyle = "rgba(255,255,255,.42)";
+    ctx.setLineDash([6,6]);
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(srcX+36,dY); ctx.lineTo(wallX,dY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#e8f5ff";
+    ctx.font = "bold 13px Sarabun, system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText(`s = ${distance.toFixed(1)} m`, (srcX+wallX)/2, dY-8);
+    ctx.restore();
+
+    ctx.save();
+    const minEchoDistance = 343*0.10/2;
+    const ebx = panel.x + 450, eby = panel.y + panel.h - 126, ebw = 282, ebh = 98;
+    ctx.fillStyle = echoOccurs ? "rgba(22,101,52,.74)" : "rgba(120,53,15,.74)";
+    ctx.strokeStyle = echoOccurs ? "rgba(74,222,128,.70)" : "rgba(251,191,36,.70)";
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, ebx, eby, ebw, ebh, 16); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 18px Sarabun, system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText(echoOccurs ? "✅ เกิด Echo" : "⚠️ ไม่เกิด Echo", ebx+ebw/2, eby+26);
+    ctx.font = "13px Sarabun, system-ui";
+    ctx.fillText(`t_echo = 2s/v ≈ ${echoTime.toFixed(3)} s`, ebx+ebw/2, eby+49);
+    ctx.fillText("เกณฑ์ Echo ≈ 0.10 s", ebx+ebw/2, eby+68);
+    ctx.fillText(`ระยะเริ่มเกิด Echo s ≈ ${minEchoDistance.toFixed(1)} m`, ebx+ebw/2, eby+87);
+    ctx.restore();
+
+    // Pedagogical note: reflection exists even when a distinct echo is not perceived.
+    ctx.save();
+    const nbx = panel.x + 42, nby = panel.y + panel.h - 126, nbw = 374, nbh = 98;
+    ctx.fillStyle = "rgba(11,18,32,.64)";
+    ctx.strokeStyle = "rgba(148,163,184,.30)";
+    ctx.lineWidth = 1.2;
+    roundRect(ctx, nbx, nby, nbw, nbh, 16); ctx.fill(); ctx.stroke();
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#e8f5ff";
+    ctx.font = "bold 14px Sarabun, system-ui";
+    ctx.fillText("หมายเหตุ", nbx+18, nby+25);
+    ctx.font = "12.5px Sarabun, system-ui";
+    ctx.fillStyle = "rgba(226,232,240,.93)";
+    ctx.fillText("เสียงสะท้อนยังมีอยู่เสมอ", nbx+18, nby+49);
+    ctx.fillText("แต่ถ้า t_echo < 0.10 s หูรับรวมกับเสียงเดิม", nbx+18, nby+68);
+    ctx.fillText("จึงแสดงว่า “ไม่เกิด Echo” ในเชิงการได้ยิน", nbx+18, nby+87);
+    ctx.restore();
+
     // Moving energy packets along both ray paths.
     if(vizState.running){
       const u=(time*0.11)%1;
-      coreDot(ctx,inX+(wallX-inX)*u,inY+(hitY-inY)*u,5+amp*2,"rgba(255,92,171,1)");
-      coreDot(ctx,wallX+(outX-wallX)*u,hitY+(outY-hitY)*u,(4.2+amp*1.7)*reflRatio,`rgba(124,255,124,${0.55+0.35*reflRatio})`);
+      coreDot(ctx,inX+(wallX-inX)*u,inY+(hitY-inY)*u,3+amp*5,"rgba(255,92,171,1)");
+      coreDot(ctx,wallX+(outX-wallX)*u,hitY+(outY-hitY)*u,(2.5+amp*4.5)*reflRatio,`rgba(124,255,124,${lim(0.30+amp*0.55,0.25,0.9)*reflRatio})`);
     }else{
       coreDot(ctx,wallX,hitY,6,"rgba(255,92,171,1)");
     }
@@ -249,10 +307,12 @@ function drawRebuiltTopic(ctx,c,p,w,h,mode){
     ctx.textAlign="center";
     ctx.fillText("θᵢ = θᵣ",bx+135,by+31);
     ctx.font="13px Sarabun, system-ui";
-    ctx.fillText(`มุมตกกระทบ = มุมสะท้อน = ${thetaDeg.toFixed(0)}°`,bx+135,by+54);
+    ctx.fillText(`มุมตกกระทบ = มุมสะท้อน = ${thetaDeg.toFixed(0)}°`,bx+135,by+50);
+    ctx.font="12px Sarabun, system-ui";
+    ctx.fillText("ความถี่หลังสะท้อนยังคงเดิม",bx+135,by+66);
     ctx.restore();
 
-    coreMetricCard(ctx,panel.x+panel.w-345,panel.y+panel.h-112,250,80,"Reflection Strength",`${Math.round(reflRatio*100)}%`,`ผนัง ${wallType==="rigid"?"แข็งสะท้อนมาก":"ดูดซับสะท้อนน้อย"}`,"#7cff7c");
+    coreMetricCard(ctx,panel.x+panel.w-345,panel.y+panel.h-112,250,80,"พลังงานสะท้อนกลับ",`≈ ${reflectedEnergy}%`,`ขึ้นกับ A² และชนิดผนัง`,"#7cff7c");
   } else if(mode==="soundRefraction"){
     const dT=vNum("vizTempDiff",15), angle=vNum("vizAngle",25); vText("vizTempDiffLabel",dT.toFixed(0)+" °C"); vText("vizAngleLabel",angle.toFixed(0)+"°");
     panel=corePanel(ctx,w,h,"Sound Refraction (การหักเหของเสียง)"); cx=w/2; cy=panel.y+panel.h*.50;
@@ -2197,6 +2257,50 @@ function updateVizPlayerButtons(trigger){
   }
 }
 
+
+function playReflectionEchoDemo(){
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if(!AudioCtx){
+    alert("เบราว์เซอร์นี้ไม่รองรับ Web Audio");
+    return;
+  }
+  const ctx = new AudioCtx();
+  const now = ctx.currentTime + 0.05;
+  const distance = Number($("vizDistance")?.value || 10);
+  const amp = Number($("vizAmp")?.value || 0.8);
+  const wallType = $("vizWallType")?.value || "rigid";
+  const echoDelay = 2*distance/343;
+  const echoOccurs = echoDelay >= 0.10;
+  const reflRatio = wallType === "rigid" ? 0.85 : 0.38;
+  const baseAmp = Math.max(0.05, Math.min(0.35, amp*0.26));
+
+  function shortBeep(t, gainScale=1, freq=880){
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(baseAmp*gainScale, t+0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t+0.090);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t+0.12);
+  }
+
+  // Direct sound
+  shortBeep(now, 1.0, 880);
+
+  // Reflected sound. If echoDelay is less than 0.10 s, it still plays close to the first sound,
+  // so students hear it as merged sound, not a clearly separated echo.
+  shortBeep(now + Math.max(0.012, echoDelay), reflRatio*amp, 880);
+
+  if($("vizEchoAudioLabel")){
+    $("vizEchoAudioLabel").textContent = echoOccurs ? "✅ เกิด Echo" : "⚠️ ไม่เกิด Echo";
+  }
+
+  setTimeout(()=>ctx.close().catch(()=>{}), Math.ceil((echoDelay+0.45)*1000));
+}
+
 function initVisualizer(){
   if(!$("visualizerCanvas")) return;
   const activeVizSection=document.querySelector(".visualizerSinglePage[data-viz-mode]");
@@ -2216,6 +2320,7 @@ function initVisualizer(){
     el.addEventListener("input", handler);
     el.addEventListener("change", handler);
   });
+  if($("reflectSoundBtn")) $("reflectSoundBtn").onclick=playReflectionEchoDemo;
   if($("vizPlayBtn")) $("vizPlayBtn").onclick=()=>{vizState.running=true;updateVizPlayerButtons("play");if(vizState.raf) cancelAnimationFrame(vizState.raf);drawVisualizer();};
   if($("vizPauseBtn")) $("vizPauseBtn").onclick=()=>{vizState.running=false;updateVizPlayerButtons("pause");drawVisualizer();};
   if($("vizResetBtn")) $("vizResetBtn").onclick=()=>{vizState.t=0;vizState.running=false;updateVizPlayerButtons("reset");if(vizState.raf) cancelAnimationFrame(vizState.raf);drawVisualizer();};

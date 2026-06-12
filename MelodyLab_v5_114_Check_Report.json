@@ -1,0 +1,35 @@
+{
+  "version": "v5.114 Echo Threshold Complete",
+  "status": "PASS",
+  "checks": {
+    "app_js_syntax_ok": true,
+    "sw_js_syntax_ok": true,
+    "reflection_page_exists": true,
+    "distance_symbol_s_not_d": true,
+    "echo_formula_uses_s": true,
+    "echo_threshold_0_10_s": true,
+    "minimum_echo_distance_17m": true,
+    "note_reflection_exists_but_no_echo": true,
+    "echo_audio_demo_present": true,
+    "frequency_slider_removed_in_reflection": true,
+    "amplitude_effect_still_strong": true,
+    "reflected_wavefront_correct_direction": true,
+    "menu_count_21": true,
+    "menu_unique": true,
+    "no_broken_html_links": true,
+    "all_visualizer_pages_have_required_parts": true,
+    "all_html_pages_basic_ok": true,
+    "control_listeners_ok": true,
+    "cache_name_updated": true
+  },
+  "syntax": {
+    "app.js": "ok",
+    "sw.js": "ok"
+  },
+  "menu_count": 21,
+  "html_files": 33,
+  "visualizer_pages": 25,
+  "broken_links": [],
+  "missing_control_listeners": [],
+  "note": "session.html is a redirect page to analysis.html and intentionally does not load app.js."
+}

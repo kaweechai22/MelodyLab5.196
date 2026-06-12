@@ -1,8 +1,8 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>MelodyLab v5.110 - Sound Reflection (การสะท้อนของเสียง)</title><meta name="description" content="MelodyLab ห้องทดลองเสียงและเก็บข้อมูล ด้วยมือถือ"><meta name="theme-color" content="#0f172a"><link rel="manifest" href="manifest.json"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="style.css"><meta name="melodylab-build-version" content="v5.110-reflection-wavefront-fix"></head><body class="detailPage page-visualizer"><header><div class="wrap nav detailNav"><button class="backBtn" onclick="location.href='visualizer.html'">←</button><a class="brand" href="index.html"><img src="icon-192.png" alt="MelodyLab"><span>Sound Reflection (การสะท้อนของเสียง)</span></a></div></header>
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>MelodyLab v5.114 - Sound Reflection (การสะท้อนของเสียง)</title><meta name="description" content="MelodyLab ห้องทดลองเสียงและเก็บข้อมูล ด้วยมือถือ"><meta name="theme-color" content="#0f172a"><link rel="manifest" href="manifest.json"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="style.css"><meta name="melodylab-build-version" content="v5.114-echo-threshold-complete"></head><body class="detailPage page-visualizer"><header><div class="wrap nav detailNav"><button class="backBtn" onclick="location.href='visualizer.html'">←</button><a class="brand" href="index.html"><img src="icon-192.png" alt="MelodyLab"><span>Sound Reflection (การสะท้อนของเสียง)</span></a></div></header>
 <main class="wrap detailMain" data-current="visualizer">
 <section class="section activeDetail visualizerSinglePage visualizerTemplatePage longitudinalFocusPage rebuiltTopicPage" id="visualizer" data-viz-mode="soundReflection">
   <div class="sectionHead templateHead">
-    <div><h2>Sound Reflection (การสะท้อนของเสียง)</h2><p class="sectionLead">จำลองการสะท้อนของเสียงจากผนัง แสดงรังสีตกกระทบ รังสีสะท้อน เส้นแนวฉาก และความสัมพันธ์ของมุมตกกระทบกับมุมสะท้อน</p></div>
+    <div><h2>Sound Reflection (การสะท้อนของเสียง)</h2><p class="sectionLead">จำลองการสะท้อนของเสียงจากผนัง โดยความถี่ไม่เปลี่ยนหลังสะท้อน และใช้ระยะทางเพื่อบอกว่าเกิด Echo ที่หูแยกได้หรือไม่</p></div>
   </div>
   <div class="visualizerTemplateGrid longitudinalFocusGrid">
     <div class="card mainViz templateMainViz longitudinalMainViz">
@@ -22,7 +22,7 @@
           <div class="templateInsightCard"><div class="insightTitle">สิ่งที่สังเกตได้</div><ul>
                 <li>คลื่นเสียงจากลำโพงเดินทางไปกระทบผนังแข็ง แล้วสะท้อนกลับ</li>
                 <li>มุมตกกระทบและมุมสะท้อนวัดจากเส้นแนวฉากที่จุดตกกระทบ</li>
-                <li>คลื่นสะท้อนต้องเริ่มจากผิวผนังแล้วเคลื่อนที่ออกจากผนังกลับเข้าสู่อากาศ โดยความเด่นของคลื่นสะท้อนขึ้นกับชนิดผนัง</li>
+                <li>ถ้าเสียงสะท้อนกลับมาช้ากว่าประมาณ 0.10 s จึงถือว่าเกิด Echo ที่หูแยกได้; ถ้าน้อยกว่านี้ให้แสดงว่า ไม่เกิด Echo ในเชิงการได้ยิน ทั้งนี้เสียงสะท้อนยังมีอยู่ แต่หูรับรวมกับเสียงเดิม</li>
           </ul></div>
           <div class="templateLegendCard">
             <div class="legendRow"><span class="legendDot cyan"></span><span>แนวคลื่น/รังสีเสียง</span></div>
@@ -36,11 +36,10 @@
       <div class="panelTitleStack"><h3>Parameters (ตัวแปรควบคุม)</h3><p class="panelSubtext">ปรับค่าแล้วสังเกตการเปลี่ยนแปลงของภาพจำลอง</p></div>
       <div class="field richField neonParamRow">
         <div class="paramIcon">f</div>
-        <div class="paramText"><label>Frequency f</label><small>ความถี่เสียง</small></div>
-        <input id="vizFreq" type="range" min="200" max="1600" step="10" value="1000">
-        <div class="paramValueWrap"><span id="vizFreqLabel" class="valueBadge">1,000 Hz</span></div>
+        <div class="paramText"><label>Frequency f</label><small>ความถี่ไม่เปลี่ยนเมื่อสะท้อน</small></div>
+        <div class="paramValueWrap"><span id="vizFreqLabel" class="valueBadge">f คงที่</span></div>
       </div>
-      <div class="field richField neonParamRow">
+<div class="field richField neonParamRow">
         <div class="paramIcon">A</div>
         <div class="paramText"><label>Amplitude A</label><small>แอมพลิจูด</small></div>
         <input id="vizAmp" type="range" min="0.2" max="1.4" step="0.05" value="0.80">
@@ -53,6 +52,12 @@
         <div class="paramValueWrap"><span id="vizAngleLabel" class="valueBadge">25°</span></div>
       </div>
       <div class="field richField neonParamRow">
+        <div class="paramIcon">d</div>
+        <div class="paramText"><label>Distance to Wall s</label><small>ระยะทางจากลำโพงถึงผนัง</small></div>
+        <input id="vizDistance" type="range" min="1" max="40" step="0.5" value="10">
+        <div class="paramValueWrap"><span id="vizDistanceLabel" class="valueBadge">10.0 m</span></div>
+      </div>
+      <div class="field richField neonParamRow">
         <div class="paramIcon">▥</div>
         <div class="paramText"><label>Wall Type</label><small>ชนิดผนังสะท้อน</small></div>
         <select id="vizWallType">
@@ -60,6 +65,12 @@
           <option value="soft">Soft (ดูดซับบางส่วน)</option>
         </select>
         <div class="paramValueWrap"><span id="vizWallTypeLabel" class="valueBadge">Rigid</span></div>
+      </div>
+      <div class="field richField neonParamRow">
+        <div class="paramIcon">🔊</div>
+        <div class="paramText"><label>ฟังตัวอย่างเสียง</label><small>เล่นเสียงจริงตามค่า d และชนิดผนัง</small></div>
+        <button id="reflectSoundBtn" class="secondary" type="button">Play Echo Demo</button>
+        <div class="paramValueWrap"><span id="vizEchoAudioLabel" class="valueBadge">พร้อมเล่น</span></div>
       </div>
       <div class="field richField neonParamRow">
         <div class="paramIcon">◷</div>
